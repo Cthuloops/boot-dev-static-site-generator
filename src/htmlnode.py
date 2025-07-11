@@ -44,12 +44,10 @@ class HTMLNode:
         """
         assert self.props, \
             "props is None"
-        if not self.props:
-            raise ValueError("Props has no value")
 
         html_string = ""
-        for k, v in self.props:
-            html_string += f" {k}={v}"
+        for k, v in self.props.items():
+            html_string += f' {k}="{v}"'
 
         assert html_string != "", \
             "html string is empty"
@@ -63,3 +61,23 @@ class HTMLNode:
         Children: {self.children}
         Props: {self.props}
         """
+
+
+class LeafNode(HTMLNode):
+    def __init__(self, tag: str | None, value: str,
+                 props: dict[str, str] | None = None):
+        # Only validate value, since it's a required field.
+        # super will validate the other arguments.
+        super().__init__(tag=tag, value=value, children=None, props=props)
+        if not isinstance(self.value, str):
+            raise ValueError("Value must be a string")
+
+    def to_html(self) -> str:
+        assert isinstance(self.value, str)
+
+        if self.tag is None:
+            return self.value
+
+        if self.props:
+            return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+        return f"<{self.tag}>{self.value}</{self.tag}>"
