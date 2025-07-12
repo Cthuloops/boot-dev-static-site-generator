@@ -2,7 +2,8 @@ import unittest
 
 from htmlnode import (
     HTMLNode,
-    LeafNode
+    LeafNode,
+    ParentNode
 )
 
 
@@ -49,4 +50,45 @@ class TestLeafNode(unittest.TestCase):
 
     def test_leaf_to_html_a(self):
         node = LeafNode("a", "Click me!", {"href": "https://www.google.com"})
-        self.assertEqual(node.to_html(), '<a href="https://www.google.com">Click me!</a>')
+        self.assertEqual(node.to_html(),
+                         '<a href="https://www.google.com">Click me!</a>')
+
+
+class TestParentNode(unittest.TestCase):
+    def test_to_html_with_children(self):
+        child = LeafNode("span", "child")
+        parent = ParentNode("div", [child])
+        self.assertEqual(parent.to_html(), "<div><span>child</span></div>")
+
+    def test_to_html_with_grandchildren(self):
+        grandchild = LeafNode("b", "grandchild")
+        child = ParentNode("span", [grandchild])
+        parent = ParentNode("div", [child])
+        self.assertEqual(
+            parent.to_html(),
+            "<div><span><b>grandchild</b></span></div>"
+        )
+
+    def test_to_html_with_props(self):
+        child = LeafNode("a", "Click Me!", {"href": "this-linkie.com"})
+        parent = ParentNode("div", [child], {"oi": "we-got-props"})
+        self.assertEqual(
+            parent.to_html(),
+            '<div oi="we-got-props"><a href="this-linkie.com">Click Me!</a></div>'
+        )
+
+    def test_tag(self):
+        with self.assertRaises(ValueError):
+            ParentNode(tag=None, children=[LeafNode("yeah", "val")])
+
+    def test_children(self):
+        with self.assertRaises(ValueError):
+            ParentNode(tag="b", children=None)
+
+    def test_empty_children(self):
+        with self.assertRaises(ValueError):
+            ParentNode(tag="p", children=[])
+
+    def test_empty_tag(self):
+        with self.assertRaises(ValueError):
+            ParentNode(tag="", children=[LeafNode("b", "text")])
